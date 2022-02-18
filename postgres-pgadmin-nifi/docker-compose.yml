@@ -1,0 +1,77 @@
+version: '3'
+services:
+  postgres:
+    container_name: postgres-scenario
+    image: 
+      postgres:11.4
+    restart: always
+    volumes:
+      - ./db-data/:/var/lib/postgresql/data/
+      # - Nifi-Workflow-Volume:/var/lib/postgresql/data
+      - ./data.sql:/docker-entrypoint-initdb.d/init.sql
+    environment:
+      - POSTGRES_USER=nifi
+      - POSTGRES_PASSWORD=nifi123!
+      - POSTGRES_DB=cattle
+      - TZ=Asia/Seoul
+      
+    ports:
+      - 5432:5432
+    networks:
+      - nifi-workflow-bridge
+
+  pgadmin:
+    container_name: pgadmin-scenario
+    image: dpage/pgadmin4
+    restart: always
+    environment:
+
+      # TODO: Change user info  
+      PGADMIN_DEFAULT_EMAIL: khkim@dtonic.io
+      PGADMIN_DEFAULT_PASSWORD: dolkys123!
+      PGADMIN_LISTEN_PORT: 6543
+    volumes:
+      - pgadmin-volume-ojt:/var/lib/pgadmin
+    ports:
+      - 6543:6543
+    depends_on:
+      - postgres
+    networks:
+      - nifi-workflow-bridge
+
+  nifi:
+    container_name: nifi-scenario
+    image: apache/nifi
+    restart: always
+    environment:
+      NIFI_WEB_HTTP_PORT: 8080
+    volumes:
+      - nifi-conf:/opt/nifi/nifi-current/conf
+      - nifi-state-volume:/opt/nifi/nifi-current/state
+      - nifi-db-volume:/opt/nifi/nifi-current/database_repository
+      - nifi-flowfile-volume:/opt/nifi/nifi-current/flowfile_repository
+      - nifi-content-volume:/opt/nifi/nifi-current/content_repository
+      - nifi-provenance-volume:/opt/nifi/nifi-current/provenance_repository
+      - C:/nifi-logs:/opt/nifi/nifi-current/logs
+
+    ports:
+      #http - 8080/https - 8443
+      - 8080:8080
+      
+    networks:
+      - nifi-workflow-bridge
+
+volumes:
+  Nifi-Workflow-Volume:
+  pgadmin-volume-ojt:
+  nifi-state-volume:
+  nifi-db-volume:
+  nifi-flowfile-volume:
+  nifi-content-volume:
+  nifi-provenance-volume:
+  nifi-conf:
+
+networks:
+  nifi-workflow-bridge:
+    driver: bridge
+  
