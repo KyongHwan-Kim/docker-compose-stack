@@ -1,0 +1,8 @@
+version: "3"
+services:
+  ubuntu-single:
+    image: ubuntu:latest
+    ports:
+      - "8083:8083"
+    stdin_open: true
+    tty: true
